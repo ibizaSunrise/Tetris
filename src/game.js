@@ -5,12 +5,12 @@ export default class Game {
         '3': 300,
         '4': 1200
     };
-    score = 0;
-    lines = 0;
-    playfield = this.createPlayfield();
-    activePiece = this.createPiece();
-    nextPiece = this.createPiece();
-    get level(){
+    
+    constructor(){
+        this.reset();
+    }
+
+    get level() {
         return Math.floor(this.lines * 0.1);
     }
     getState() {
@@ -38,8 +38,17 @@ export default class Game {
             level: this.level,
             lines: this.level,
             nextPiece: this.nextPiece,
-            playfield
+            playfield,
+            isGameOver: this.topOut
         };
+    }
+    reset() {
+        this.score = 0;
+        this.lines = 0;
+        this.topOut = false;
+        this.playfield = this.createPlayfield();
+        this.activePiece = this.createPiece();
+        this.nextPiece = this.createPiece();
     }
     createPlayfield() {
         const playfield = [];
@@ -60,59 +69,59 @@ export default class Game {
         switch (type) {
             case 'I':
                 piece.blocks = [
-                    [0,0,0,0],
-                    [1,1,1,1],
-                    [0,0,0,0],
-                    [0,0,0,0]
+                    [0, 0, 0, 0],
+                    [1, 1, 1, 1],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0]
                 ];
                 break;
             case 'J':
                 piece.blocks = [
-                    [0,0,0],
-                    [2,2,2],
-                    [0,0,2]
+                    [0, 0, 0],
+                    [2, 2, 2],
+                    [0, 0, 2]
                 ];
                 break;
             case 'L':
                 piece.blocks = [
-                    [0,0,0],
-                    [3,3,3],
-                    [3,0,0]
+                    [0, 0, 0],
+                    [3, 3, 3],
+                    [3, 0, 0]
                 ];
                 break;
             case 'O':
                 piece.blocks = [
-                    [0,0,0,0],
-                    [0,4,4,0],
-                    [0,4,4,0],
-                    [0,0,0,0]
+                    [0, 0, 0, 0],
+                    [0, 4, 4, 0],
+                    [0, 4, 4, 0],
+                    [0, 0, 0, 0]
                 ];
                 break;
             case 'S':
                 piece.blocks = [
-                    [0,0,0],
-                    [0,5,5],
-                    [5,5,0]
+                    [0, 0, 0],
+                    [0, 5, 5],
+                    [5, 5, 0]
                 ];
                 break;
             case 'T':
                 piece.blocks = [
-                    [0,0,0],
-                    [6,6,6],
-                    [0,6,0]
+                    [0, 0, 0],
+                    [6, 6, 6],
+                    [0, 6, 0]
                 ];
                 break;
             case 'Z':
                 piece.blocks = [
-                    [0,0,0],
-                    [7,7,0],
-                    [0,7,7]
+                    [0, 0, 0],
+                    [7, 7, 0],
+                    [0, 7, 7]
                 ];
                 break;
             default:
                 throw new Error('Неизвестный тип фигуры');
         }
-        piece.x = Math.floor((10 - piece.blocks[0].length)/2);
+        piece.x = Math.floor((10 - piece.blocks[0].length) / 2);
         piece.y = -1;
         return piece;
     }
@@ -131,6 +140,7 @@ export default class Game {
         }
     }
     movePieceDown() {
+        if (this.topOut) return;
         this.activePiece.y += 1;
 
         if (this.hasCollision()) {
@@ -139,6 +149,9 @@ export default class Game {
             const clearLines = this.clearLines();
             this.updateScor(clearLines);
             this.updatePieces();
+        }
+        if (this.hasCollision()) {
+            this.topOut = true;
         }
     }
     rotatePiece() {
@@ -184,35 +197,35 @@ export default class Game {
             }
         }
     }
-    clearLines(){
+    clearLines() {
         const rows = 20;
         const columns = 10;
         let lines = [];
 
-        for (let y = rows - 1; y >= 0; y--){
+        for (let y = rows - 1; y >= 0; y--) {
             let numberOfBlocks = 0;
-            for(let x = 0; x < columns; x++){
-                if(this.playfield [y][x]){
-                    numberOfBlocks +=1;
+            for (let x = 0; x < columns; x++) {
+                if (this.playfield[y][x]) {
+                    numberOfBlocks += 1;
                 }
             }
-            if(numberOfBlocks === 0){
+            if (numberOfBlocks === 0) {
                 break;
-            }else if(numberOfBlocks < columns){
+            } else if (numberOfBlocks < columns) {
                 continue;
-            }else if(numberOfBlocks === columns){
+            } else if (numberOfBlocks === columns) {
                 lines.unshift(y);
             }
         }
-        for(let index of lines){
+        for (let index of lines) {
             this.playfield.splice(index, 1);
             this.playfield.unshift(new Array(columns).fill(0));
 
         }
         return lines.length;
     }
-    updateScor(clearedLines){
-        if(clearedLines > 0){
+    updateScor(clearedLines) {
+        if (clearedLines > 0) {
             this.score += Game.points[clearedLines] * (this.level + 1);
             this.lines += clearedLines;
         }
